@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import { CameraHelper } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {FBXLoader} from "three/examples/jsm/loaders/FBXLoader";
 
 // SCENE
 const scene = new THREE.Scene();
@@ -33,27 +34,64 @@ orbitControls.update();
 // LIGHTS
 light()
 
-// FLOOR
-generateFloor()
+
 
 // MODEL WITH ANIMATIONS
 var characterControls: CharacterControls
-new GLTFLoader().load('models/Soldier.glb', function (gltf) {
-    const model = gltf.scene;
-    model.traverse(function (object: any) {
-        if (object.isMesh) object.castShadow = true;
-    });
-    scene.add(model);
 
-    const gltfAnimations: THREE.AnimationClip[] = gltf.animations;
-    const mixer = new THREE.AnimationMixer(model);
-    const animationsMap: Map<string, THREE.AnimationAction> = new Map()
-    gltfAnimations.filter(a => a.name != 'TPose').forEach((a: THREE.AnimationClip) => {
-        animationsMap.set(a.name, mixer.clipAction(a))
-    })
+const textureLoader = new THREE.TextureLoader()
+ const dogTexture = textureLoader.load('models/dog/PolyArt_Dogs_color.png')
 
-    characterControls = new CharacterControls(model, mixer, animationsMap, orbitControls, camera,  'Idle')
-});
+ 
+const fbxLoader = new FBXLoader()
+
+fbxLoader.load(
+    '/models/map/Mapmap2.fbx',
+    (fbx) =>
+    {
+        
+        //fbx.children[0].material = bakedMaterial
+        // fbx.scene.traverse((child)=>{
+        //     child.material = bakedMaterial
+        // })
+        fbx.position.set(0,0,0)
+        fbx.scale.set(0.05, 0.05, 0.05)
+        scene.add(fbx)
+    }
+)
+
+//dog
+
+fbxLoader.load(
+    '/models/dog/Lowpoly_Akita_IP.fbx',
+    (fbx) =>
+    {
+        console.log(fbx.animations)
+        const bakedMaterial = new THREE.MeshBasicMaterial({map: dogTexture})
+        //@ts-ignore
+        fbx.children[0].material = bakedMaterial
+        //fbx.children[0].material = bakedMaterial
+        //const bakedMaterial = new THREE.MeshBasicMaterial({map: floor02Texture})
+        //fbx.children[0].material = bakedMaterial
+        // fbx.scene.traverse((child)=>{
+        //     child.material = bakedMaterial
+        // })
+        fbx.position.set(-20,1.2,10)
+        fbx.rotation.set(0,90,0)
+        fbx.scale.set(2, 2, 2)
+        scene.add(fbx)
+
+        const fbxAnimations = fbx.animations
+        const mixer = new THREE.AnimationMixer(fbx)
+        const animationsMap = new Map()
+        fbxAnimations.filter(a => a.name !='TPose').forEach((a)=> {
+            animationsMap.set(a.name, mixer.clipAction(a))
+        })
+
+        characterControls = new CharacterControls(fbx,mixer,animationsMap,orbitControls,camera,'Arm_Dog|idle_1')
+    }
+)
+
 
 // CONTROL KEYS
 const keysPressed = {  }
@@ -94,42 +132,6 @@ function onWindowResize() {
 }
 window.addEventListener('resize', onWindowResize);
 
-function generateFloor() {
-    // TEXTURES
-    const textureLoader = new THREE.TextureLoader();
-    const placeholder = textureLoader.load("./textures/placeholder/placeholder.png");
-    const sandBaseColor = textureLoader.load("./textures/sand/Sand 002_COLOR.jpg");
-    const sandNormalMap = textureLoader.load("./textures/sand/Sand 002_NRM.jpg");
-    const sandHeightMap = textureLoader.load("./textures/sand/Sand 002_DISP.jpg");
-    const sandAmbientOcclusion = textureLoader.load("./textures/sand/Sand 002_OCC.jpg");
-
-    const WIDTH = 4
-    const LENGTH = 4
-    const NUM_X = 15
-    const NUM_Z = 15
-
-    const geometry = new THREE.PlaneGeometry(WIDTH, LENGTH, 512, 512);
-    const material = new THREE.MeshStandardMaterial(
-        {
-            map: sandBaseColor, normalMap: sandNormalMap,
-            displacementMap: sandHeightMap, displacementScale: 0.1,
-            aoMap: sandAmbientOcclusion
-        })
-    // const material = new THREE.MeshPhongMaterial({ map: placeholder})
-
-    for (let i = 0; i < NUM_X; i++) {
-        for (let j = 0; j < NUM_Z; j++) {
-            const floor = new THREE.Mesh(geometry, material)
-            floor.receiveShadow = true
-            floor.rotation.x = - Math.PI / 2
-
-            floor.position.x = i * WIDTH - (NUM_X / 2) * WIDTH
-            floor.position.z = j * LENGTH - (NUM_Z / 2) * LENGTH
-
-            scene.add(floor)
-        }
-    }
-}
 
 function light() {
     scene.add(new THREE.AmbientLight(0xffffff, 0.7))

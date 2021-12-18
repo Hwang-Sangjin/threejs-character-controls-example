@@ -53,11 +53,11 @@ export class CharacterControls {
 
         var play = '';
         if (directionPressed && this.toggleRun) {
-            play = 'Run'
+            play = 'Arm_Dog|Run_F'
         } else if (directionPressed) {
-            play = 'Walk'
+            play = 'Arm_Dog|Walk_F'
         } else {
-            play = 'Idle'
+            play = 'Arm_Dog|idle_1'
         }
 
         if (this.currentAction != play) {
@@ -72,7 +72,7 @@ export class CharacterControls {
 
         this.mixer.update(delta)
 
-        if (this.currentAction == 'Run' || this.currentAction == 'Walk') {
+        if (this.currentAction == 'Arm_Dog|Run_F' || this.currentAction == 'Arm_Dog|Walk_F') {
             // calculate towards camera direction
             var angleYCameraDirection = Math.atan2(
                     (this.camera.position.x - this.model.position.x), 
@@ -82,7 +82,7 @@ export class CharacterControls {
 
             // rotate model
             this.rotateQuarternion.setFromAxisAngle(this.rotateAngle, angleYCameraDirection + directionOffset)
-            this.model.quaternion.rotateTowards(this.rotateQuarternion, 0.2)
+            this.model.quaternion.rotateTowards(this.rotateQuarternion, -0.2)
 
             // calculate direction
             this.camera.getWorldDirection(this.walkDirection)
@@ -91,7 +91,7 @@ export class CharacterControls {
             this.walkDirection.applyAxisAngle(this.rotateAngle, directionOffset)
 
             // run/walk velocity
-            const velocity = this.currentAction == 'Run' ? this.runVelocity : this.walkVelocity
+            const velocity = this.currentAction == 'Arm_Dog|Run_F' ? this.runVelocity : this.walkVelocity
 
             // move model & camera
             const moveX = this.walkDirection.x * velocity * delta
